@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="ur" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Advanced Teacher-Wise Timetable Dashboard - GHSS Waryam Wala</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-main: #090d16; --bg-card: #111827; --border: #1f2937;
+    --text-main: #f3f4f6; --text-muted: #9ca3af; --primary: #0284c7;
+    --danger: #dc2626; --success: #16a34a; --warning: #ca8a04;
+    --accent: #4f46e5;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Noto Nastaliq Urdu', 'Poppins', sans-serif; background: var(--bg-main); color: var(--text-main); padding: 20px; min-width: 1200px; text-align: right; }
+  
+  /* --- PORTRAIT FULL SCREEN ALERT SYSTEM --- */
+  #orientation-alert {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: #030712; z-index: 99999; display: flex; align-items: center; justify-content: center;
+  }
+  .alert-box-wrapper {
+    position: relative; width: 75vw; height: 100vh; max-width: 450px; max-height: 600px;
+    border-radius: 16px; overflow: hidden; padding: 4px; background: rgba(255,255,255,0.03);
+  }
+  .alert-box-wrapper::before {
+    content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+    background: conic-gradient(#0284c7, #38bdf8, #a855f7, #dc2626, #0284c7);
+    animation: rotateBoundary 4s linear infinite; z-index: 1;
+  }
+  .alert-content {
+    position: relative; width: 100%; height: 100%; background: #090d16;
+    border-radius: 12px; z-index: 2; display: flex; flex-direction: column;
+    justify-content: center; align-items: center; padding: 25px; text-align: center; box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+  }
+  @keyframes rotateBoundary { 100% { transform: rotate(360deg); } }
+  .alert-text-line { font-size: 1.15rem; color: #fff; margin-bottom: 12px; line-height: 2; min-height: 40px; white-space: pre-wrap; }
+  .alert-heading { color: #38bdf8; font-size: 1.35rem; font-weight: bold; }
+  .alert-warning-text { color: #ca8a04; font-size: 1.1rem; border-top: 1px dashed var(--border); border-bottom: 1px dashed var(--border); padding: 10px 0; margin: 15px 0; }
+  .blink-shukriya { font-size: 1.4rem; font-weight: bold; color: #16a34a !important; animation: blinkText 0.8s infinite alternate; margin: 10px 0; }
+  @keyframes blinkText { 0% { opacity: 0.2; transform: scale(0.95); } 100% { opacity: 1; transform: scale(1.05); } }
+  .alert-footer { font-size: 0.9rem; color: #9ca3af; margin-top: 15px; line-height: 1.8; }
+  .alert-footer strong { color: #38bdf8; font-size: 1rem; }
+  .rotate-action-btn {
+    background: linear-gradient(135deg, #0284c7, #4f46e5); color: white; border: none;
+    padding: 12px 24px; font-size: 1rem; font-weight: bold; border-radius: 30px;
+    cursor: pointer; display: inline-flex; align-items: center; gap: 8px; margin: 15px 0;
+    box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4); font-family: 'Noto Nastaliq Urdu', sans-serif; transition: 0.3s;
+  }
+  .rotate-action-btn:hover { transform: translateY(-2px); }
+
+  .container { max-width: 100%; margin: 0 auto; }
+  @media (orientation: portrait) and (max-width: 900px) {
+    body { overflow: hidden; min-width: 100vw; padding: 0; }
+    .container { display: none !important; }
+    #orientation-alert { display: flex !important; }
+  }
+  @media (orientation: landscape) or (min-width: 901px) {
+    #orientation-alert { display: none !important; }
+  }
+
+  /* --- DAY TABS SYSTEM --- */
+  .day-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; background: var(--bg-card); padding: 10px; border-radius: 10px; border: 1px solid var(--border); }
+  .day-btn { background: #030712; color: var(--text-muted); border: 1px solid var(--border); padding: 10px 20px; font-size: 1rem; font-weight: bold; border-radius: 6px; cursor: pointer; font-family: 'Noto Nastaliq Urdu', sans-serif; transition: 0.2s; }
+  .day-btn:hover { color: #fff; border-color: var(--primary); }
+  .day-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); box-shadow: 0 0 10px rgba(2, 132, 199, 0.4); }
+
+  header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid var(--border); padding-bottom: 15px; }
+  header h1 { font-size: 2.2rem; color: #38bdf8; letter-spacing: 1px; font-family: 'Poppins', sans-serif; }
+  header p { color: var(--text-muted); font-size: 1rem; margin-top: 5px; }
+  .btn-group { display: flex; justify-content: center; gap: 15px; margin: 15px 0; }
+  .print-btn { background: #0284c7; color: white; border: none; padding: 12px 24px; font-size: 1rem; font-weight: bold; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; font-family: 'Noto Nastaliq Urdu', sans-serif; transition: 0.2s; }
+  .print-btn:hover { background: #0369a1; }
+  .print-btn.secondary { background: var(--accent); }
+  .print-btn.secondary:hover { background: #4338ca; }
+  .print-btn.success { background: var(--success); }
+  .print-btn.success:hover { background: #0f766e; }
+  .print-btn.danger { background: var(--danger); }
+  .print-btn.danger:hover { background: #b91c1c; }
+  .print-btn.audio-btn { background: #a855f7; }
+  .print-btn.audio-btn:hover { background: #9333ea; }
+
+  .section-title { font-size: 1.3rem; margin: 25px 0 12px; color: #38bdf8; border-right: 5px solid #0284c7; padding-right: 12px; font-weight: bold; text-align: right; }
+  .teachers-panel { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 15px; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+  .teacher-chip { background: #030712; border: 1px solid var(--border); padding: 8px 12px; border-radius: 6px; display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem; }
+  .teacher-chip span { font-weight: 600; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 140px; }
+  .load-badge { font-size: 0.75rem; background: #1e293b; color: #38bdf8; padding: 2px 6px; border-radius: 4px; font-family: 'Poppins', sans-serif; font-weight: bold; }
+  .status-btn { background: var(--success); color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem; font-weight: bold; width: 65px; text-align: center; }
+  .status-btn.leave { background: var(--danger); }
+
+  .table-responsive { overflow-x: auto; background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 25px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.5); }
+  table { width: 100%; border-collapse: collapse; text-align: center; font-size: 0.85rem; dir: rtl; }
+  th, td { padding: 8px; border: 1px solid var(--border); vertical-align: middle; text-align: center; }
+  th { background: #030712; color: #38bdf8; font-weight: 700; font-size: 0.9rem; }
+  td:first-child { background: #030712; font-weight: bold; color: #fff; min-width: 160px; text-align: right; padding-right: 15px; border-left: 2px solid var(--border); }
+  
+  .cell-content { display: flex; flex-direction: column; gap: 4px; align-items: center; justify-content: center; }
+  .subject-name { font-weight: 600; color: #e5e7eb; font-size: 0.8rem; background: #1f2937; padding: 2px 4px; border-radius: 4px; width: 100%; text-align: center; min-height: 22px; }
+  .t-dropdown { width: 100%; background: #030712; color: #fff; border: 1px solid var(--border); border-radius: 4px; padding: 4px; font-size: 0.8rem; text-align: center; }
+  
+  @keyframes redWhiteBlink { 0%, 100% { background-color: #dc2626 !important; color: white !important; } 50% { background-color: white !important; color: #dc2626 !important; } }
+  td.blink-red-white { animation: redWhiteBlink 0.8s infinite; border: 2px solid #dc2626 !important; font-weight: bold; }
+  td.blink-red-white .subject-name { background: transparent !important; color: inherit !important; }
+  td.blink-red-white .t-dropdown { background: transparent !important; color: inherit !important; border: 1px solid currentColor; }
+  
+  .sub-order-wrap { background: #0f172a; border: 2px dashed #38bdf8; border-radius: 10px; padding: 20px; margin-top: 30px; text-align: right; }
+  .sub-order-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+  .sub-order-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  .sub-order-table th { background: #1e293b; color: #38bdf8; font-weight: bold; }
+  .sub-order-table td { background: #111827; color: #fff; padding: 10px 5px; }
+  .sub-inside-box { font-size: 0.75rem; background: #1f2937; border-radius: 4px; padding: 3px; margin-bottom: 4px; text-align: center; color: #9ca3af; border: 1px dashed #374151; }
+  .sub-inside-teacher { font-size: 0.85rem; font-weight: bold; color: #22c55e; text-align: center; }
+  
+  footer { margin-top: 50px; padding: 20px; background: #030712; border-top: 2px solid var(--border); text-align: center; border-radius: 10px 10px 0 0; dir: ltr; }
+  .dev-panel { font-family: 'Poppins', sans-serif; font-size: 1.05rem; font-weight: 600; color: #e5e7eb; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .dev-name { color: #38bdf8; font-size: 1.2rem; }
+  .dev-phone { color: #a855f7; font-size: 1rem; font-weight: normal; }
+
+  @media print {
+    @page { size: landscape; margin: 8mm; }
+    body { background: white; color: black; min-width: 100%; padding: 0; direction: rtl; text-align: right; }
+    #orientation-alert, .teachers-panel, .btn-group, header, .day-tabs, .section-title:not(.print-visible) { display: none !important; }
+    .table-responsive { border: none; box-shadow: none; overflow: visible; }
+    th { background: #f3f4f6 !important; color: black !important; border: 1px solid #000; }
+    td { border: 1px solid #000 !important; background: transparent !important; color: black !important; animation: none !important; }
+    td:first-child { background: #e5e7eb !important; color: black !important; text-align: right !important; }
+    .t-dropdown { border: none; background: transparent; color: black; appearance: none; -webkit-appearance: none; font-weight: bold; }
+    .sub-order-wrap { border: 2px solid #000; page-break-before: auto; direction: rtl; background: transparent !important; }
+    .sub-order-table th, .sub-order-table td { border: 1px solid #000 !important; color: black !important; background: transparent !important; }
+    .sub-inside-box { background: transparent !important; border: 1px solid #aaa !important; color: black !important; }
+    .sub-inside-teacher { color: black !important; font-weight: bold; }
+    footer { display: block !important; background: transparent !important; border: none !important; color: black !important; margin-top: 20px !important; }
+    .dev-panel { color: black !important; }
+    .dev-name { color: black !important; font-weight: bold; }
+    .dev-phone { color: black !important; }
+    body.print-only-subs .master-timetable-section, body.print-only-subs .master-title-section { display: none !important; }
+    body.print-only-subs .sub-order-wrap { page-break-before: avoid !important; margin-top: 0 !important; }
+  }
+</style>
+</head>
+<body>
+
+<div id="orientation-alert">
+  <div class="alert-box-wrapper">
+    <div class="alert-content">
+      <div class="alert-text-line alert-heading" id="line1"></div>
+      <div class="alert-text-line" id="line2"></div>
+      <div class="alert-text-line alert-warning-text" id="line3"></div>
+      <button class="rotate-action-btn" onclick="requestLandscape()">🔄 اسکرین روٹیٹ کریں</button>
+      <div class="alert-text-line blink-shukriya" id="line4" style="display:none;">شکریہ</div>
+      <div class="alert-footer">
+        <strong id="line5"></strong><br>
+        <span id="line6"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <header>
+    <h1>GOVT. HIGHER SECONDARY SCHOOL WARYAM WALA</h1>
+    <p>ایڈوانسڈ اسمارٹ ٹائم ٹیبل ڈیش بورڈ (2026)</p>
+    <div class="btn-group">
+      <button class="print-btn" onclick="window.print()">🖨️ پورا ٹائم ٹیبل پرنٹ کریں</button>
+      <button class="print-btn secondary" onclick="printOnlySubstitutions()">📋 صرف متبادل ٹائم ٹیبل پرنٹ کریں</button>
+      <button class="print-btn danger" onclick="resetAllData()">🔄 تمام ڈیٹا ری سیٹ کریں</button>
+    </div>
+  </header>
+
+  <!-- --- DAY TABS --- -->
+  <div class="day-tabs" id="dayTabs">
+    <button class="day-btn active" onclick="switchDay('Monday')">پیر (Monday)</button>
+    <button class="day-btn" onclick="switchDay('Tuesday')">منگل (Tuesday)</button>
+    <button class="day-btn" onclick="switchDay('Wednesday')">بدھ (Wednesday)</button>
+    <button class="day-btn" onclick="switchDay('Thursday')">جمعرات (Thursday)</button>
+    <button class="day-btn" onclick="switchDay('Friday')">جمعہ (Friday)</button>
+    <button class="day-btn" onclick="switchDay('Saturday')">ہفتہ (Saturday)</button>
+  </div>
+
+  <div class="section-title">👤 اساتذہ کی حاضری اور پیریڈ لوڈ کنٹرول پینل</div>
+  <div class="teachers-panel" id="teachersPanel"></div>
+
+  <div class="section-title print-visible master-title-section" id="masterTitle">📅 ٹائم ٹیبل - ٹیچر وائز (پیر)</div>
+  <div class="table-responsive master-timetable-section">
+    <table id="timetableTable">
+      <thead>
+        <tr>
+          <th>معلم / پیریڈ</th>
+          <th>پیریڈ 1</th>
+          <th>پیریڈ 2</th>
+          <th>پیریڈ 3</th>
+          <th>پیریڈ 4</th>
+          <th>پیریڈ 5</th>
+          <th>پیریڈ 6</th>
+          <th>پیریڈ 7</th>
+          <th>پیریڈ 8</th>
+        </tr>
+      </thead>
+      <tbody id="timetableBody"></tbody>
+    </table>
+  </div>
+
+  <div class="sub-order-wrap">
+    <div class="sub-order-header">
+      <div class="section-title print-visible" style="margin:0; border:none; padding:0;">📋 روزانہ کا متبادل ٹائم ٹیبل (Daily Substitution Table)</div>
+      <div style="display: flex; gap: 10px;">
+        <button class="print-btn audio-btn" onclick="speakSubstitutionTimetable()">📢 متبادل ڈیوٹیز سنیں</button>
+        <button class="print-btn success" onclick="shareOnWhatsApp()">💬 واٹس ایپ پر شیئر کریں</button>
+      </div>
+    </div>
+    <table class="sub-order-table">
+      <thead>
+        <tr>
+          <th style="width: 180px; text-align: right; padding-right: 15px;">نام ٹیچر (رخصت پر)</th>
+          <th>پیریڈ 1</th>
+          <th>پیریڈ 2</th>
+          <th>پیریڈ 3</th>
+          <th>پیریڈ 4</th>
+          <th>پیریڈ 5</th>
+          <th>پیریڈ 6</th>
+          <th>پیریڈ 7</th>
+          <th>پیریڈ 8</th>
+        </tr>
+      </thead>
+      <tbody id="subOrderBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<footer>
+  <div class="dev-panel">
+    <div>Developed By: <span class="dev-name">Ghulam Shabbir (Principal) GHSS Waryam Wala (Jhang)</span> <span class="dev-phone">| Contact: 03157432791</span></div>
+  </div>
+</footer>
+
+<script>
+// --- TYPEWRITER & ORIENTATION LOGIC ---
+const textData = [
+  { id: "line1", text: "السلام علیکم ورحمتہ اللہ وبرکاتہ" },
+  { id: "line2", text: "خوش آمدید" },
+  { id: "line3", text: "بہتر ڈسپلے کے لئے لینڈ سکیپ ویو (موبائل ٹیڑھا کر کے) میں دیکھیں" },
+  { id: "line4", text: "شکریہ", isSpecial: true },
+  { id: "line5", text: "غلام شبیر (پرنسپل)" },
+  { id: "line6", text: "گورنمنٹ ہائر سیکنڈری سکول وریام والا" }
+];
+
+function runTypewriter(index = 0) {
+  if (index >= textData.length) return;
+  const current = textData[index];
+  const element = document.getElementById(current.id);
+  if (current.isSpecial) { element.style.display = "block"; runTypewriter(index + 1); return; }
+  let charIndex = 0;
+  function type() {
+    if (charIndex < current.text.length) {
+      element.textContent += current.text.charAt(charIndex);
+      charIndex++;
+      setTimeout(type, 40);
+    } else {
+      setTimeout(() => runTypewriter(index + 1), 200);
+    }
+  }
+  type();
+}
+function requestLandscape() {
+  if (screen.orientation && screen.orientation.lock) {
+    document.documentElement.requestFullscreen().then(() => {
+      screen.orientation.lock('landscape').catch(() => alert("براہ کرم آٹو روٹیشن آن کر کے موبائل ٹیڑھا کریں!"));
+    }).catch(() => alert("براہ کرم موبائل کو مینوئلی لینڈ سکیپ پوزیشن میں کریں!"));
+  } else { alert("براہ کرم موبائل کو مینوئلی لینڈ سکیپ پوزیشن میں کیجیے!"); }
+}
+window.addEventListener("DOMContentLoaded", () => { runTypewriter(); initSystem(); });
+
+// --- CORE SYSTEM DATA & LOGIC ---
+const teachersList = [
+  "غلام شبیرSS", "اعتزاز اسلمSST", "بشیر احمدSST", "محمد زبیر امجد SST", "امتیاز حسین SST", 
+  "سید علی عباس شاہ SSE", "محمد محسن SSE", "غلام مصطفىٰ EST(Sci)", "شاہد رسول شاکر EST", "زوار حسینEST", 
+  "امجد اقبال EST(Sci)", "خاور محمود خانEST", "ممتاز احمدEST", "ناصر اقبال EST", "محمد رفیق EST", 
+  "طاہر محمود صدیقی PET", "محمد الیاس EST (AT)", "حسن نواز خان EST (Sci)", "محمد عون اویسEST (Sci)", "منیر احمد PST", 
+  "ضرغام عباس STI", "عطامحمد CLI", "نوید قمر STI", "مبین یٰسین STI", "مبشر علی STI", 
+  "ناصر  عباس STI", "محمد کاشف STI", "محمد نعیم STI", "محمد الیاس STI", "سمیع اللہ STI"
+];
+
+const baseTimetable = [
+  { teacher: "غلام شبیرSS", periods: ["", "", "GEO (XII)", "GEO (XI)", "", "", "", ""] },
+  { teacher: "اعتزاز اسلمSST", periods: ["COMP (X-JHR)", "", "COMP (IX-JHR+L)", "COMP (XI)", "ICT (1-2) (X-JHR)", "", "", ""] },
+  { teacher: "بشیر احمدSST", periods: ["ENG A (XII)", "", "", "EDU (XII)", "PSY (XII)", "ENG B (XI)", "", ""] },
+  { teacher: "محمد زبیر امجد SST", periods: ["CHEM (X-I)", "", "CHEM (IX-L)", "CHEM (IX-I)", "", "CHEM (IX-J)", "", ""] },
+  { teacher: "امتیاز حسین SST", periods: ["MATH (IX-J)", "MATH (IX-JHR)", "MATH (X-JHR)", "", "", "PHY (X-I)", "", ""] },
+  { teacher: "سید علی عباس شاہ SSE", periods: ["CHEM (X-L)", "BIO (IX-I+J)", "", "BIO (IX-L+JHR)", "", "BIO (X-L)", "T.Q (X-L)", ""] },
+  { teacher: "محمد محسن SSE", periods: ["PHY (IX-JHR)", "", "", "", "PHY (IX-J)", "", "PHY (X-JHR)", "PHY (X-J)"] },
+  { teacher: "غلام مصطفىٰ EST(Sci)", periods: ["MATH (IX-I)", "MATH (X-I)", "", "", "", "ISL (IX-I)", "URDU (IX-JHR)", "URDU (IX-I)"] },
+  { teacher: "شاہد رسول شاکر EST", periods: ["ENG (X-JHR)", "", "ENG (IX-J)", "PST (X-JHR)", "URDU (VII-I)", "PST (X-I)", "", ""] },
+  { teacher: "زوار حسینEST", periods: ["ENG (X-J)", "ENG (IX-L)", "ENG (X-I)", "", "ENG (IX-I)", "", "URDU (IX-J)", ""] },
+  { teacher: "امجد اقبال EST(Sci)", periods: ["PHY (IX-L)", "PHY (X-L)", "CHEM (IX-JHR)", "", "MATHS (X-J)", "", "ISL  (IX-L)", ""] },
+  { teacher: "خاور محمود خانEST", periods: ["", "COMP (IX-I+J)", "ICT 1-3 (X- J)", "", "COMP (XII)", "", "COMP( X-J)", "URDU (IX-L)"] },
+  { teacher: "ممتاز احمدEST", periods: ["ENG (VI-J)", "", "GEO/HIS (VI-I)", "ISL+T.Q (VII-J)", "GEO/HIS (VI-J)", "", "", "ENG+AGRI (VI-J)"] },
+  { teacher: "ناصر اقبال EST", periods: ["ENG (VII-J)", "", "", "URDU A (XII)", "", "ENG (VIII-J)", "ENG+AGRI (VII-J)", "ENG+AGRI (VIII-J)"] },
+  { teacher: "محمد رفیق EST", periods: ["", "ISL+TQ (VI-J)", "", "TQ 3-4 (X-J)", "", "ISL+TQ (VIII-I)", "TQ3-4 (X-JHR)", "TQ (IX-JHR)"] },
+  { teacher: "طاہر محمود صدیقی PET", periods: ["H&P.E (XI)", "URDU (VII-J)", "", "URDU  (VI-J)", "", "", "GEO/HIS (VII-J)", "ISL+TQ (VII-I)"] },
+  { teacher: "محمد الیاس EST (AT)", periods: ["", "ISL+TQ (VIII-J)", "", "ISL( IX-J)", "ISL( IX-JHR)", "", "T.Q (IX-L)", "T.Q (IX-J)"] },
+  { teacher: "حسن نواز خان EST (Sci)", periods: ["SCI (VI-I)", "", "SCI (VIII-J)", "SC (VII-I)", "GEO/HIS (VI-I)", "SCI (VI-J)", "", ""] },
+  { teacher: "محمد عون اویسEST (Sci)", periods: ["MATH (VIII-J)", "", "MATH (VII-J)", "MATH (VI-I)", "MATH (IX-L)", "", "GEO/HIS (VIII-J)", ""] },
+  { teacher: "منیر احمد PST", periods: ["MATH (VIII-I)", "ECO (XII)", "MATH (VI-J)", "", "", "", "GEO/HIS (VIII-I)", "URDU (VIII-I)"] },
+  { teacher: "ضرغام عباس STI", periods: ["", "ENG (VIII-I)", "ENG (VI-I)", "URDU (VIII-J)", "PST (X-L)", "ENG+AGRI (VI-I)", "ENG+AGRI (VIII-I)", ""] },
+  { teacher: "عطامحمد CLI", periods: ["COMP (VI-I)", "COMP (VII-I)", "", "COMP (VI-J)", "COMP (VII-J)", "COMP (VIII-J)", "", ""] },
+  { teacher: "نوید قمر STI", periods: ["", "ENG A (XI)", "ENG B (XII)", "", "ENG (X-L)", "ENG (IX-JHR)", "URDU (VI-I)", ""] },
+  { teacher: "مبین یٰسین STI", periods: ["", "ISL+TQ (VI-I)", "", "SC (VIII-I)", "", "URDU (X-JHR)", "", "CHEM (X-JHR)"] },
+  { teacher: "مبشر علی STI", periods: ["STAT (XI)", "STAT (XII)", "MATH (XI)", "", "MATH (XII)", "", "COMP (VI-J)", ""] },
+  { teacher: "ناصر  عباس STI", periods: ["URDU B (XII)", "URDU B (XI)", "", "", "URDU (X-J)", "URDU A (XI)", "", "URDU (X-I)"] },
+  { teacher: "محمد کاشف STI", periods: ["ENG (VII-I)", "", "ENG+AGR (VII-I)", "BIO (X-I)", "", "COMP (VIII-J)", "", "URDU (X-L)"] },
+  { teacher: "محمد نعیم STI", periods: ["", "ARABIC (XII)", "", "ISL+TQ(XI)", "ARABIC (XI)", "T.Q B 1-2 TQ A 3-4 (XII)", "T.Q (X-I)", ""] },
+  { teacher: "محمد الیاس STI", periods: ["", "PST. (X-J)", "PST (X-L)", "", "CIVICS (XII)", "PST (XII) 1-2 A 3-4 B", "GEO/HIS (VII-I)", ""] },
+  { teacher: "سمیع اللہ STI", periods: ["", "PHY (XII)", "PHY (IX-I)", "MATH (X-L)", "", "MATH (VII-I)", "", "SC (VII-J)"] }
+];
+
+let appState = {};
+let currentDay = "Monday";
+
+function initSystem() {
+  const savedData = localStorage.getItem('ghss_smart_timetable_data');
+  if (savedData) {
+    appState = JSON.parse(savedData);
+    if (!appState["Monday"] || !appState["Monday"].timetable || !appState["Monday"].timetable[0].periods[2]) {
+      setupFreshData();
+    }
+  } else {
+    setupFreshData();
+  }
+  refreshAll();
+}
+
+function setupFreshData() {
+  const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  appState = {};
+  days.forEach(d => {
+    appState[d] = {
+      attendance: {},
+      selections: {},
+      timetable: JSON.parse(JSON.stringify(baseTimetable))
+    };
+    teachersList.forEach(t => { appState[d].attendance[t] = "Present"; });
+  });
+  saveToLocalStorage();
+}
+
+function saveToLocalStorage() {
+  localStorage.setItem('ghss_smart_timetable_data', JSON.stringify(appState));
+}
+
+function switchDay(day) {
+  currentDay = day;
+  document.querySelectorAll('.day-btn').forEach(btn => btn.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('masterTitle').textContent = `📅 ٹائم ٹیبل - ٹیچر وائز (${getDayInUrdu(day)})`;
+  refreshAll();
+}
+
+function getDayInUrdu(day) {
+  const mapping = { Monday: "پیر", Tuesday: "منگل", Wednesday: "بدھ", Thursday: "جمعرات", Friday: "جمعہ", Saturday: "ہفتہ" };
+  return mapping[day];
+}
+
+function calculateTeacherLoads() {
+  let loads = {};
+  teachersList.forEach(t => { loads[t] = 0; });
+  let dayData = appState[currentDay];
+
+  dayData.timetable.forEach((row, rIdx) => {
+    for (let pIdx = 0; pIdx < 8; pIdx++) {
+      let subject = row.periods[pIdx];
+      if (subject) {
+        let assigned = dayData.selections[`${rIdx}-${pIdx}`];
+        if (dayData.attendance[row.teacher] === "Present" && !assigned) {
+          loads[row.teacher]++;
+        } else if (assigned && assigned !== row.teacher && dayData.attendance[assigned] === "Present") {
+          loads[assigned]++;
+        }
+      }
+    }
+  });
+  return loads;
+}
+
+function drawAttendancePanel() {
+  const panel = document.getElementById('teachersPanel');
+  panel.innerHTML = '';
+  let dayData = appState[currentDay];
+  let loads = calculateTeacherLoads();
+
+  teachersList.forEach(t => {
+    const isPresent = dayData.attendance[t] === "Present";
+    const chip = document.createElement('div');
+    chip.className = 'teacher-chip';
+    chip.innerHTML = `
+      <span>${t} <span class="load-badge">L: ${loads[t]}</span></span>
+      <button class="status-btn ${isPresent ? '' : 'leave'}" onclick="toggleAttendance('${t}')">
+        ${isPresent ? 'حاضر ' : 'رخصت '}
+      </button>
+    `;
+    panel.appendChild(chip);
+  });
+}
+
+function toggleAttendance(teacher) {
+  let dayData = appState[currentDay];
+  dayData.attendance[teacher] = dayData.attendance[teacher] === "Present" ? "Absent" : "Present";
+  
+  if (dayData.attendance[teacher] === "Absent") {
+    dayData.timetable.forEach((row, rIdx) => {
+      for (let pIdx = 0; pIdx < 8; pIdx++) {
+        if (dayData.selections[`${rIdx}-${pIdx}`] === teacher) {
+          delete dayData.selections[`${rIdx}-${pIdx}`];
+        }
+      }
+    });
+  }
+  saveToLocalStorage();
+  refreshAll();
+}
+
+function getSmartSuggestedTeachers(pIdx, originalTeacher, targetSubject) {
+  let dayData = appState[currentDay];
+  let busyTeachers = new Set();
+
+  dayData.timetable.forEach((row, rIdx) => {
+    if (row.periods[pIdx] !== "" && dayData.attendance[row.teacher] === "Present") {
+      const selected = dayData.selections[`${rIdx}-${pIdx}`];
+      if (!selected || selected === row.teacher) busyTeachers.add(row.teacher);
+    }
+  });
+  Object.keys(dayData.selections).forEach(key => {
+    const [rowId, perId] = key.split('-');
+    if (parseInt(perId) === pIdx) busyTeachers.add(dayData.selections[key]);
+  });
+
+  let available = teachersList.filter(t => t === originalTeacher || (dayData.attendance[t] === "Present" && !busyTeachers.has(t)));
+  let matchKeywords = [];
+  if (targetSubject.includes("CHEM")) matchKeywords.push("CHEM", "Sci", "SST");
+  else if (targetSubject.includes("PHY")) matchKeywords.push("PHY", "Sci", "SST");
+  else if (targetSubject.includes("BIO")) matchKeywords.push("BIO", "Sci", "SSE");
+  else if (targetSubject.includes("MATH")) matchKeywords.push("MATH", "Sci", "EST(Sci)");
+  else if (targetSubject.includes("COMP") || targetSubject.includes("ICT")) matchKeywords.push("COMP", "CLI", "SST");
+  else if (targetSubject.includes("ENG")) matchKeywords.push("ENG", "SST", "EST");
+  else if (targetSubject.includes("URDU")) matchKeywords.push("URDU", "EST", "PST");
+  else if (targetSubject.includes("ISL") || targetSubject.includes("TQ")) matchKeywords.push("ISL", "TQ", "AT");
+
+  available.sort((a, b) => {
+    if (a === originalTeacher) return -1;
+    if (b === originalTeacher) return 1;
+    let scoreA = matchKeywords.reduce((acc, kw) => acc + (a.includes(kw) ? 1 : 0), 0);
+    let scoreB = matchKeywords.reduce((acc, kw) => acc + (b.includes(kw) ? 1 : 0), 0);
+    return scoreB - scoreA;
+  });
+
+  return available;
+}
+
+function renderTimetable() {
+  const tbody = document.getElementById('timetableBody');
+  tbody.innerHTML = '';
+  let dayData = appState[currentDay];
+
+  dayData.timetable.forEach((row, rIdx) => {
+    const tr = document.createElement('tr');
+    const tdTeacher = document.createElement('td');
+    tdTeacher.textContent = row.teacher;
+    tr.appendChild(tdTeacher);
+    const isAbsent = dayData.attendance[row.teacher] === "Absent";
+    if (isAbsent) tr.style.backgroundColor = "rgba(220, 38, 38, 0.03)";
+
+    for (let pIdx = 0; pIdx < 8; pIdx++) {
+      const td = document.createElement('td');
+      td.id = `cell-${rIdx}-${pIdx}`;
+      const subject = row.periods[pIdx];
+      
+      if (!subject) {
+        td.innerHTML = `<div class="cell-content"><div class="subject-name">-</div></div>`;
+      } else {
+        const currentAssigned = dayData.selections[`${rIdx}-${pIdx}`] !== undefined ? dayData.selections[`${rIdx}-${pIdx}`] : row.teacher;
+        if (isAbsent && currentAssigned === row.teacher) td.classList.add('blink-red-white');
+
+        const availableList = getSmartSuggestedTeachers(pIdx, row.teacher, subject);
+        let selectHtml = `<select class="t-dropdown" onchange="updateLiveStaff(${rIdx}, ${pIdx}, this.value)">`;
+        if (isAbsent && currentAssigned === row.teacher) {
+          selectHtml += `<option value="${row.teacher}" selected>💡 ڈیوٹی تجویز کریں</option>`;
+        } else if (!isAbsent && currentAssigned === row.teacher) {
+          selectHtml += `<option value="${row.teacher}" selected>${row.teacher}</option>`;
+        } else {
+          selectHtml += `<option value="${row.teacher}">${row.teacher} (اصل)</option>`;
+        }
+        availableList.forEach(t => {
+          if (t !== row.teacher) {
+            let isSuggested = availableList.indexOf(t) < 4 && t !== row.teacher; 
+            selectHtml += `<option value="${t}" ${currentAssigned === t ? 'selected' : ''}>${t} ${isSuggested ? '⭐' : ''}</option>`;
+          }
+        });
+        selectHtml += `</select>`;
+
+        td.innerHTML = `<div class="cell-content"><div class="subject-name">${subject}</div>${selectHtml}</div>`;
+      }
+      tr.appendChild(td);
+    }
+    tbody.appendChild(tr);
+  });
+}
+
+function updateLiveStaff(rIdx, pIdx, value) {
+  let dayData = appState[currentDay];
+  const originalTeacher = dayData.timetable[rIdx].teacher;
+  if (value === originalTeacher) delete dayData.selections[`${rIdx}-${pIdx}`];
+  else dayData.selections[`${rIdx}-${pIdx}`] = value;
+  saveToLocalStorage();
+  refreshAll();
+}
+
+function evaluateRulesAndSubstitutions() {
+  const subBody = document.getElementById('subOrderBody');
+  let dayData = appState[currentDay];
+  let absentTeachers = dayData.timetable.filter(row => dayData.attendance[row.teacher] === "Absent");
+  
+  if (absentTeachers.length === 0) {
+    subBody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:var(--text-muted); padding:15px;">تمام اساتذہ حاضر ہیں۔ متبادل ڈیوٹی لگانے کے لیے اوپر کسی ٹیچر کو رخصت پر مارک کریں۔</td></tr>`;
+    return;
+  }
+  subBody.innerHTML = '';
+  absentTeachers.forEach(row => {
+    const rIdx = dayData.timetable.findIndex(t => t.teacher === row.teacher);
+    const tr = document.createElement('tr');
+    let rowHtml = `<td style="color:var(--danger); font-weight:bold; background:#1e1b4b; text-align:right; padding-right:15px;">${row.teacher}</td>`;
+    for (let pIdx = 0; pIdx < 8; pIdx++) {
+      const subject = row.periods[pIdx];
+      if (!subject) {
+        rowHtml += `<td><div style="color:var(--text-muted);">-</div></td>`;
+      } else {
+        const currentSelectedTeacher = dayData.selections[`${rIdx}-${pIdx}`] !== undefined ? dayData.selections[`${rIdx}-${pIdx}`] : row.teacher;
+        if(currentSelectedTeacher === row.teacher) {
+          rowHtml += `<td><div class="sub-inside-box">${subject}</div><div class="sub-inside-teacher" style="color:var(--danger)">❌ خالی</div></td>`;
+        } else {
+          rowHtml += `<td><div class="sub-inside-box">${subject}</div><div class="sub-inside-teacher">${currentSelectedTeacher}</div></td>`;
+        }
+      }
+    }
+    tr.innerHTML = rowHtml;
+    subBody.appendChild(tr);
+  });
+}
+
+// --- TEXT TO SPEECH (ADVANCED AUDIO FEATURE) ---
+function speakSubstitutionTimetable() {
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+
+    let dayData = appState[currentDay];
+    let absentTeachers = dayData.timetable.filter(row => dayData.attendance[row.teacher] === "Absent");
+    
+    let speechText = "";
+    if (absentTeachers.length === 0) {
+      speechText = "ماشااللہ، آج اسکول کے تمام اساتذہ حاضر ہیں۔ کوئی متبادل ڈیوٹی موجود نہیں ہے۔";
+    } else {
+      speechText = `السلام علیکم۔ گورنمنٹ ہائر سیکنڈری اسکول وریام والا کا متبادل ٹائم ٹیبل برائے دن ${getDayInUrdu(currentDay)}۔ `;
+      absentTeachers.forEach(row => {
+        let cleanAbsentName = row.teacher.replace(/(SS|SST|SSE|EST\(Sci\)|EST|PET|AT|PST|STI|CLI)/g, "").trim();
+        speechText += `آج محترم ${cleanAbsentName} صاحب رخصت پر ہیں۔ ان کی متبادل ڈیوٹیز یہ ہیں۔ `;
+        
+        const rIdx = dayData.timetable.findIndex(t => t.teacher === row.teacher);
+        for (let pIdx = 0; pIdx < 8; pIdx++) {
+          if (row.periods[pIdx]) {
+            let assigned = dayData.selections[`${rIdx}-${pIdx}`];
+            if (!assigned || assigned === row.teacher) {
+              speechText += `پیریڈ نمبر ${pIdx + 1} خالی ہے۔ `;
+            } else {
+              let cleanAssignedName = assigned.replace(/(SS|SST|SSE|EST\(Sci\)|EST|PET|AT|PST|STI|CLI)/g, "").trim();
+              speechText += `پیریڈ نمبر ${pIdx + 1} میں محترم ${cleanAssignedName} صاحب کلاس لیں گے۔ `;
+            }
+          }
+        }
+      });
+      speechText += "شکریہ۔";
+    }
+
+    let utterance = new SpeechSynthesisUtterance(speechText);
+    
+    // موبائل/کمپیوٹر میں موجود آوازوں کو اسکین کر کے "مرد" (Male) کی آواز منتخب کرنا
+    let voices = window.speechSynthesis.getVoices();
+    
+    // اردو، ہندی یا گوگل کی مردانہ صوتی خصوصیات والی آواز تلاش کرنا
+    let maleVoice = voices.find(voice => 
+      (voice.lang.includes('ur') || voice.lang.includes('hi')) && 
+      (voice.name.toLowerCase().includes('male') || voice.name.toLowerCase().includes('google'))
+    );
+    
+    // اگر مخصوص مردانہ آواز نہ ملے تو کوئی بھی دستیاب اردو/ہندی آواز لے لیں
+    if (!maleVoice) {
+      maleVoice = voices.find(voice => voice.lang.includes('ur') || voice.lang.includes('hi'));
+    }
+
+    if (maleVoice) utterance.voice = maleVoice;
+    
+    // آواز کو روبوٹک سے قدرتی بنانے کی سیٹنگز
+    utterance.lang = 'ur-PK';
+    utterance.rate = 0.8;   // بولنے کی رفتار (0.8 سے آواز زیادہ دھیمی اور نیچرل لگتی ہے)
+    utterance.pitch = 0.9;  // پچ کو تھوڑا کم کیا ہے تاکہ آواز میں مردانہ بھاری پن آ جائے
+
+    window.speechSynthesis.speak(utterance);
+  } else {
+    alert("معذرت، آپ کا براؤزر آواز والے فیچر کو سپورٹ نہیں کرتا۔");
+  }
+}
+
+// آوازیں لوڈ ہونے کا انتظار کرنے کے لیے (کچھ براؤزرز میں یہ لازمی ہوتا ہے)
+if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
+  speechSynthesis.onvoiceschanged = speakSubstitutionTimetable;
+}
+
+// --- WHATSAPP INTEGRATION ---
+function shareOnWhatsApp() {
+  let dayData = appState[currentDay];
+  let absentTeachers = dayData.timetable.filter(row => dayData.attendance[row.teacher] === "Absent");
+  if(absentTeachers.length === 0) { alert("کوئی ٹیچر رخصت پر نہیں ہے!"); return; }
+
+  let msg = `*گورنمنٹ ہائر سیکنڈری سکول وریام والا*\n`;
+  msg += `*متبادل ٹائم ٹیبل ڈیوٹی لسٹ - ${getDayInUrdu(currentDay)}*\n`;
+  msg += `-------------------------------------------\n\n`;
+
+  absentTeachers.forEach(row => {
+    msg += `• *رخصت پر:* ${row.teacher}\n`;
+    const rIdx = dayData.timetable.findIndex(t => t.teacher === row.teacher);
+    let duties = [];
+    for(let pIdx=0; pIdx<8; pIdx++) {
+      if(row.periods[pIdx]) {
+        let assigned = dayData.selections[`${rIdx}-${pIdx}`] || "❌ خالی";
+        duties.push(`پیریڈ ${pIdx+1}: ${assigned} (${row.periods[pIdx]})`);
+      }
+    }
+    msg += duties.join('\n') + `\n\n`;
+  });
+
+  let url = `https://api.whatsapp.com/send?text=` + encodeURIComponent(msg);
+  window.open(url, '_blank');
+}
+
+function resetAllData() {
+  if (confirm("کیا آپ واقعی تمام حاضری، متبادل ڈیوٹیز اور سیو ڈیٹا ری سیٹ کرنا چاہتے ہیں؟")) {
+    localStorage.removeItem('ghss_smart_timetable_data');
+    setupFreshData();
+    refreshAll();
+  }
+}
+
+function printOnlySubstitutions() {
+  document.body.classList.add('print-only-subs');
+  window.print();
+  setTimeout(() => { document.body.classList.remove('print-only-subs'); }, 500);
+}
+
+function refreshAll() {
+  drawAttendancePanel();
+  renderTimetable();
+  evaluateRulesAndSubstitutions();
+}
+</script>
+
+</body>
+</html>
