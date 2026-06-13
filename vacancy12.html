@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIS Post Correction Table</title>
+    <!-- Embedding Jameel Noori Nastaleeq via Google Fonts / Fontsource alternative for web -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            color: #333;
+            line-height: 1.6;
+        }
+        .header {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 25px;
+        }
+        .header h1 {
+            font-size: 18px;
+            margin: 5px 0;
+            text-transform: uppercase;
+        }
+        .header h2 {
+            font-size: 16px;
+            margin: 5px 0;
+            text-decoration: underline;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            margin-bottom: 40px;
+        }
+        th, td {
+            border: 1px solid #000;
+            padding: 10px;
+            text-align: left;
+            vertical-align: top;
+            font-size: 13px;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+            text-align: center;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .signature-section {
+            float: right;
+            text-align: left;
+            margin-top: 30px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        /* Floating Print Button on Main Page */
+        .print-btn-main {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .print-btn-main:hover {
+            background-color: #0056b3;
+        }
+
+        /* --- Custom Alert Modal Styles --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        /* 3:4 Aspect Ratio Box */
+        .modal-box {
+            width: 375px; 
+            height: 500px; 
+            background-color: #222; /* Dark theme to make colors pop */
+            border: 3px solid #ffeb3b;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 25px;
+            box-sizing: border-box;
+            direction: rtl; /* Right to Left for Urdu */
+            font-family: 'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', 'Urdu Typesetting', serif;
+        }
+
+        .modal-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            text-align: center;
+        }
+
+        /* Yellow Typewriter style text */
+        .msg-text {
+            color: #ffeb3b; 
+            font-size: 22px;
+            line-height: 2.2;
+            margin-bottom: 20px;
+            white-space: pre-wrap;
+            border-left: 2px solid transparent; /* Mimics typewriter cursor */
+            overflow: hidden;
+        }
+
+        /* Blue Typewriter style signature */
+        .sig-text {
+            color: #64b5f6; 
+            font-size: 16px;
+            line-height: 2;
+        }
+
+        /* Blinking Animations */
+        .blink-red {
+            color: #ff5252;
+            animation: blinker 1s linear infinite;
+            font-weight: bold;
+        }
+
+        .blink-green {
+            color: #69f0ae;
+            animation: blinker 1s linear infinite;
+            font-weight: bold;
+        }
+
+        @keyframes blinker {
+            50% { opacity: 0; }
+        }
+
+        /* Modal Footer Buttons */
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+
+        .btn-dashboard {
+            background-color: #ffeb3b;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: Arial, sans-serif;
+            flex-grow: 1;
+        }
+
+        .btn-dashboard:hover {
+            background-color: #fbc02d;
+        }
+
+        .btn-print {
+            background-color: #ffffff;
+            border: 1px solid #ccc;
+            padding: 10px 15px;
+            font-size: 18px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .btn-print:hover {
+            background-color: #eeeeee;
+        }
+
+        /* Hide elements during print */
+        @media print {
+            .modal-overlay, .print-btn-main {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Main Page Print Button -->
+    <button class="print-btn-main" onclick="window.print()">🖨️ Print Report</button>
+
+    <!-- Custom Alert Modal (3:4 Ratio) -->
+    <div class="modal-overlay" id="customAlert">
+        <div class="modal-box">
+            <div class="modal-content">
+                <!-- Message Body -->
+                <div class="msg-text" id="typewriter-msg"></div>
+                
+                <!-- Signature Body -->
+                <div class="sig-text" id="typewriter-sig" style="display: none;">
+                    <span class="blink-red">منجانب:</span> 
+                    <span class="blink-green">غلام شبیر</span> 
+                    پرنسپل گورنمنٹ ہائر سیکنڈری سکول وریام والا
+                </div>
+            </div>
+
+            <!-- Footer Buttons -->
+            <div class="modal-buttons">
+                <button class="btn-dashboard" onclick="closeAlert()">ڈیش بورڈ دیکھیں</button>
+                <button class="btn-print" onclick="window.print()" title="Print Report">🖨️</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Original Table Content -->
+    <div class="header">
+        <h1>Office of the Principal Govt. Higher Secondary School Waryam Wala, Jhang</h1>
+        <h2>Correction on SIS</h2>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Sr No</th>
+                <th>Name of Teacher</th>
+                <th>CNIC No./ Personal No (DAO)</th>
+                <th>EMIS Code</th>
+                <th>Name of School</th>
+                <th>Required Status to Change</th>
+                <th>Relevant Documents attached (YES/NO)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="text-center">1</td>
+                <td>Mumtaz Hussain</td>
+                <td>33203-1471238-9/<br>30689079</td>
+                <td class="text-center">33230003</td>
+                <td>GHSS WARYAM WALA</td>
+                <td>TEACHER RETIRED ON MEDICAL GROUND. THE POST OF PST IS STILL REFLECTING AS FILLED IN SIS. REQUESTED TO UPDATE & MARK THE POST AS VACANT.</td>
+                <td class="text-center" style="font-weight: bold;">YES</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="signature-section">
+        <p><strong>Principal</strong></p>
+        <p>Govt. Higher Secondary School<br>
+        Waryam Wala Tehsh Shorkot</p>
+        <p>District Jhang</p>
+    </div>
+    <!-- JavaScript for Typewriter Effect and Close Control -->
+    <script>
+        const msgText = "السلام علیکم ورحمتہ اللہ وبرکاتہ!\nSIS پر تصحیح درکار ہے";
+        const msgContainer = document.getElementById('typewriter-msg');
+        const sigContainer = document.getElementById('typewriter-sig');
+        let index = 0;
+
+        // Typewriter function
+        function typeWriter() {
+            if (index < msgText.length) {
+                msgContainer.innerHTML += msgText.charAt(index);
+                index++;
+                setTimeout(typeWriter, 50); // Speed of typing
+            } else {
+                // Show the colored signature after typing completes
+                sigContainer.style.display = "block";
+            }
+        }
+
+        // Run typewriter effect on load
+        window.onload = function() {
+            typeWriter();
+        };
+
+        // Close alert function
+        function closeAlert() {
+            document.getElementById('customAlert').style.display = 'none';
+        }
+    </script>
+
+</body>
+</html>
